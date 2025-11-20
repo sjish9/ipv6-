@@ -1,106 +1,106 @@
-export default {
-  异步获取(请求，环境，ctx) {
-      const url = new URL(request.url);
+export  default  {
+  异步 获取（请求， 环境， ctx ） {
+      const  url  =  new  URL ( request . url ) ;
 
 // 处理 API 请求：支持 POST (/api/add-ssl) 和 GET (/?...)
       如果 （
-          （url.pathname === '/api/add-ssl' && request.method === 'POST'）||
-          （url.pathname === '/' && request.method === 'GET' && url.searchParams.has('zoneId')）
-      ) {
-          return handleApiRequest(request, url.searchParams);
+          （url.pathname === ' / api / add - ssl' && request.method === 'POST' ）||       
+          （url.pathname === ' / ' && request.method === ' GET ' && url.searchParams.has ( ' zoneId ' ) ）​​        
+      )  {
+          return  handleApiRequest ( request ,  url.searchParams ) ;​​
       }
 
 // 返回 HTML 页面 (仅当是根路径的 GET 请求且没有 API 参数时)
-      返回新的 Response(getHTML(), {
+      返回 新的 Response ( getHTML ( ) ,  {
           标题：{
-              'Content-Type': 'text/html; charset=utf-8',
-          },
-      });
-  },
-};
+              'Content-Type' : 'text/html; charset=utf-8' ,
+          } ，
+      } ) ;
+  } ，
+} ；
 
 // 统一处理API请求（支持POST Body和GET Query Params）
-异步函数 handleApiRequest(request, queryParams) {
-  let email, zone_id, api_key, enabled, certificate_authority;
+异步 函数 handleApiRequest ( request ,  queryParams )  {
+  let  email ,  zone_id ,  api_key ,  enabled ,  certificate_authority ;
 
   尝试 {
-      如果 (请求方法 === 'POST') {
+      如果 (请求.方法 ===  'POST' )  {
           // POST 请求：从请求体中解析 JSON
-          const body = await request.json();
-          电子邮件 = body.email;
-          zone_id = body.zoneId;
-          api_key = body.apikey;
-          enabled = body.enabled !== undefined ? body.enabled : true;
-          证书颁发机构 = body.ca || "ssl_com";
-      } else if (request.method === 'GET') {
+          const  body  =  await  request.json ( ) ;​​
+          email  =  body.email ;​​
+          zone_id  =  body.zoneId ;​​
+          api_key  =  body.apikey ;​​
+          enabled  =  body.enabled ! == undefined ? body.enabled : true ;​​​  
+          certificate_authority  =  body.ca || " ssl_com "  ; 
+      }  else  if  ( request . method  ===  'GET' )  {
           // GET 请求：从 URL 查询参数中获取
-          email = queryParams.get('email');
-          zone_id = queryParams.get('zoneId');
-          api_key = queryParams.get('apikey');
-          enabled = !(queryParams.get('enabled') === 'false');
-          certificate_authority = queryParams.get('ca') || "ssl_com";
+          email  =  queryParams.get ( ' email ' ) ;
+          zone_id  =  queryParams.get ( ' zoneId ' ) ;
+          api_key  =  queryParams.get ( ' apikey ' ) ;
+          enabled  =  ! ( queryParams . get ( 'enabled' )  ===  'false' ) ;
+          certificate_authority  =  queryParams.get ( 'ca' ) || " ssl_com " ;  
       }
 
       // 验证简单的输入
-      如果 (!email || !zone_id || !api_key) {
-          返回新的 Response(JSON.stringify({
-              成功：否
-              errors: ['邮箱、区域ID和API密钥都是必需的']
-          }), {
-              状态：400
-              标题：{
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
+      如果 ( ! email  ||  ! zone_id  ||  ! api_key )  {
+          返回 新 的响应（JSON.stringify （{​
+              成功：否，
+              error : [ '邮箱、区域ID和API关键都是必需的' ]
+          } ) ,  {
+              状态：400​
+              标题：{ 
+              'Content-Type' : 'application/json' ,
+              'Access-Control-Allow-Origin' : '*' ,
           }
-          });
+          } ) ;
       }
       
       // 验证并设置CA默认值
-      const validCAs = ["ssl_com", "lets_encrypt", "google", "sectigo"];
-      const caToUse = validCAs.includes(certificate_authority) ? certificate_authority : "ssl_com";
+      const  validCAs  =  [ "ssl_com" ,  "lets_encrypt" ,  "google" ,  "sectigo" ] ;
+      const  caToUse  =  validCAs.includes ( certificate_authority ) ? certificate_authority : " ssl_com " ;
 
       //调用Cloudflare API
-      const response = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone_id}/ssl/universal/settings`, {
-          方法：'PATCH'，
+      const  response  =  await  fetch ( `https://api.cloudflare.com/client/v4/zones/$ { zone_id } /ssl/universal/settings` ,  {
+          方法：'PATCH' ，
           标题：{
               'X-Auth-Email'：电子邮件，
-              'X-Auth-Key': api_key，
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+              'X-Auth-Key'：api_key ，
+              'Content-Type' : 'application/json' ,
+          } ，
+          body : JSON.stringify ( {​​
               已启用：已启用，
               证书颁发机构：caToUse
-          }),
-      });
+          } ) ，
+      } ) ;
 
-      const result = await response.json();
+      const  result  =  await  response.json ( ) ;​​
 
       // 为 API 调用返回 JSON 响应
-      return new Response(JSON.stringify(result), {
+      返回 新 的响应（JSON.stringify （result ）, {​ 
           标题：{
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'GET, POST',
-              'Access-Control-Allow-Headers': 'Content-Type',
-          },
-      });
+              'Content-Type' : 'application/json' ,
+              'Access-Control-Allow-Origin' : '*' ,
+              'Access-Control-Allow-Methods' : 'GET, POST' ,
+              'Access-Control-Allow-Headers' : 'Content-Type' ,
+          } ，
+      } ) ;
 
-  } catch (error) {
-      返回新的 Response(JSON.stringify({
-          成功：否
-          错误：[{消息：`请求失败：${error.message || '未知错误'}` }]
-      }), {
-          状态：500
+  }  catch  ( error )  {
+      返回 新 的响应（JSON.stringify （{​
+          成功：否，
+          错误：[ { 消息：`请求失败：${错误。留言 ||  '未知错误' } `  } ]
+      } ) ,  {
+          状态：500​
           标题：{
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
+              'Content-Type' : 'application/json' ,
+              'Access-Control-Allow-Origin' : '*' ,
           }
-      });
+      } ) ;
   }
 }
 
 // getHTML 函数保持不变，因为表单表单仍然使用 POST 请求
-function getHTML() {
+function  getHTML ( )  {
   返回 `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -184,7 +184,6 @@ function getHTML() {
       间隙：15px；
       margin-bottom: 25px;
    }
-
     .register-btn {
         弹性：1；
         显示：块；
@@ -236,7 +235,6 @@ function getHTML() {
     .ca-select-style {
         高度：48像素；
     }
-
     input[type="text"]:focus,
     input[type="email"]:focus,
     文本区域：聚焦，
@@ -275,7 +273,6 @@ function getHTML() {
         align-items: center;
         box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.15);
     }
-
     .info-box .btn#generate-btn { margin-top: 15px; }
     .info-box .btn#generate-btn i { position: relative; top: 1px; }
     
@@ -345,7 +342,6 @@ function getHTML() {
         行高：1.5；
         颜色：#34495e；
     }
-
     。页脚 {
       文本对齐方式：居中；
       margin-top: 20px;
@@ -365,7 +361,6 @@ function getHTML() {
       颜色：继承；
       显示：行内块；
     }
-
     /* 响应式调整：在小屏幕上变回单列布局 */
     @media (max-width: 600px) {
       .form-row { flex-direction: column; gap: 0; }
@@ -416,7 +411,6 @@ function getHTML() {
               </select>
           </div>
       </div>
-
       <button type="submit" class="btn" id="submit-btn">
           <div class="spinner" id="spinner"></div>
           <span id="btn-text"><i class="fas fa-plus-circle"></i>添加 SSL 证书</span>
@@ -424,7 +418,6 @@ function getHTML() {
     </form>
     
     <div class="result" id="result-message"></div>
-
     <div class="info-box">
       <h2>IP6.ARPA域名生成工具</h2>
       <div class="form-row" style="margin-top: 15px;">
@@ -440,13 +433,11 @@ function getHTML() {
         </div>
       </div>
     </div>    
-
     <div class="info-box">
       <h2>API GET 调用示例</h2>
       <p style="font-size: 14px; margin-bottom: 10px;">证书颁发机构 (ca) 支持：<code>ssl_com</code>、<code>lets_encrypt</code>、<code>google</code>、<code>sectigo</code>。<strong>注意：ip6.arpa 域名通常仅支持 <code>ssl_com</code>。</strong></p>
       <pre style="background: rgba(255, 255, 255, 0.7); padding: 10px; border-radius: 6px; font-size: 14px; overflow-x: auto; color: #000;">https://worker地址/?zoneId=...&email=...&apikey=...&enabled=true&ca=ssl_com</pre>
     </div>
-
     <div class="footer">
       版权所有 2025
       <a href="https://gist.github.com/eooce/d3549e80a67dd39e47a55f81bae6b802" target="_blank"><i class="fab fa-github"></i> GitHub 源代码</a> <span class="separator">|</span>
@@ -454,40 +445,31 @@ function getHTML() {
       <p style="margin-top: 10px;">此站点中api key仅用于请求，不记录，如有疑问，可自行在cloudflare工作人员部署</p>
     </div>
   </div>
-
   <script>
   // ==========================================================
   // 域名生成逻辑（支持随机子域名生成）
   // ==========================================================
-
   // 辅助函数：将缩写的IPv6地址展开为完整的32位十六进制字符串
   函数 expandIpv6(ipv6) {
       ipv6 = ipv6.toLowerCase();
-
       // 检查是否有 '::' 缩写
       如果 (!ipv6.includes('::')) {
           return ipv6.split(':').map((block) => block.padStart(4, '0')).join('');
       }
-
       const parts = ipv6.split('::');
       const leftBlocks = parts[0].split(':').filter(Boolean);
       const rightBlocks = parts[1].split(':').filter(Boolean);
-
       const existingBlocksCount = leftBlocks.length + rightBlocks.length;
       const zeroBlocksCount = 8 - existingBlocksCount;
-
       如果 (zeroBlocksCount < 0) {
           throw new Error('IPv6地址块过多，格式错误。');
       }
-
       const zeroPadding = Array(zeroBlocksCount).fill('0000').join('');
-
       // 填充左边和右边的块，然后合并
       const fullLeft = leftBlocks.map((block) => block.padStart(4, '0')).join('');
       const fullRight = rightBlocks.map((block) => block.padStart(4, '0')).join('');
       返回 fullLeft + zeroPadding + fullRight；
   }
-
   //辅助函数：生成指定长度的随机十六进制字符串
   function randomHex(length) {
       let result = '';
@@ -497,33 +479,26 @@ function getHTML() {
       }
       返回结果；
   }
-
   // 生成 ipv6 反向根域名
   function generateArpaRootDomain(cidr) {
       const parts = cidr.split('/');
-
       如果 (parts.length !== 2) {
           throw new Error('CIDR格式不正确，请使用IP/外部长度格式。');
       }
-
       const ipv6 = parts[0].trim();
       const prefixLength = parseInt(parts[1], 10);
-
       如果 (前缀长度为 NaN || 前缀长度小于 0 || 前缀长度大于 128 || 前缀长度 % 4 !== 0) {
           throw new Error('发达长度字段，必须是 4 的倍数 (例如: /32, /48, /64)。');
       }
-
       const fullHex = ExpandIpv6(ipv6); // 获取完整的 32 字符十六周六地址
       const hexCharsInPrefix = prefixLength / 4; // 截取固定的网络远端部分
       const networkPrefix = fullHex.substring(0, hexCharsInPrefix);
       const reverse = networkPrefix.split('').reverse().join('.'); // 食品并用 '.' 分隔
       返回反转 + '.ip6.arpa'; // 加工后缀
   }
-
   // 生成独立域名
   function generateRandomPrefixDomains(baseArpaDomain) {
       const 域 = [baseArpaDomain]; // 根域名
-
       for (let i = 0; i < 3; i++) {
           // 生成1到4位长的随机十六进制字符串
           const randomLength = Math.floor(Math.random() * 4) + 1; // 1 到 4
@@ -532,11 +507,9 @@ function getHTML() {
       }
       返回域；
   }
-
   // ==========================================================
   // DOM交互逻辑
   // ==========================================================
-
   // 辅助函数：从本地存储加载CIDR
   函数 loadSavedCidr() {
       const savedCidr = localStorage.getItem('ipv6Cidr');
@@ -544,17 +517,14 @@ function getHTML() {
           document.getElementById('ipv6-cidr').value = savedCidr;
       }
   }
-
   // 辅助函数：保存 CIDR 到本地存储
   函数 saveCidr(cidr) {
       localStorage.setItem('ipv6Cidr', cidr);
   }
-
   // 辅助函数：显示字段错误
   function showError(fieldId, message) {
       const field = document.getElementById(fieldId);
       const errorElement = document.getElementById(fieldId + '-error');
-
       field.classList.add('error');
       errorElement.textContent = 消息；
       errorElement.style.display = 'block';
@@ -562,7 +532,6 @@ function getHTML() {
           聚焦字段();
       }
   }
-
   // 辅助函数：重置所有错误状态
   function resetErrors() {
       const errorFields = document.querySelectorAll('.error');
@@ -574,7 +543,6 @@ function getHTML() {
           message.style.display = 'none';
       });
   }
-
   // 辅助函数：显示操作结果
   function showResult(message, type) {
       const resultElement = document.getElementById('result-message');
@@ -584,7 +552,6 @@ function getHTML() {
       resultElement.style.display = 'block';
       resultElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
-
   // 辅助函数：执行复制操作（仅使用Clipboard API）
   异步函数 copyTextToClipboard(text) {
       如果 (navigator.clipboard && navigator.clipboard.writeText) {
@@ -600,19 +567,16 @@ function getHTML() {
           返回 false；
       }
   }
-
   // ==========================================================
   // 页面初始化和事件监听
   // ==========================================================
   document.addEventListener('DOMContentLoaded', function () {
       // 1.加载保存的CIDR
       loadSavedCidr();
-
       // 2.监听CIDR输入，实时保存
       document.getElementById('ipv6-cidr').addEventListener('input', function (e) {
           saveCidr(e.target.value.trim());
       });
-
       // 3.事件监听: IPv6域名生成 (调用随机生成函数)
       document.getElementById('generate-btn').addEventListener('click', async function () {
           resetErrors();
@@ -620,19 +584,16 @@ function getHTML() {
           const domainOutput = document.getElementById('generated-domain');
           const cidr = cidrInput.value.trim();
           domainOutput.value = '';
-
           如果 (!cidr) {
               showError('ipv6-cidr', '请输入 IPv6 CIDR 地址。');
               返回;
           }
-
           尝试 {
               const rootDomain =generateArpaRootDomain(cidr); // 生成 ARPA 根域名
               const generatedDomains =generateRandomPrefixDomains(rootDomain); // 生成包含根域名和独立的4个域名列表
               const resultText = generatedDomains.join('\\n'); // 将所有架构构建成多行文本
               域输出.值=结果文本; // 将所有4个域名分配给textarea
               const copySuccess = 等待 copyTextToClipboard(resultText); // 复制操作 (复制所有 4 个域名)
-
               let resultMessage = 'IP6.ARPA域名生成成功！共生成4个域名。';
               如果（复制成功）{
                   resultMessage += '所有域名已自动复制到剪贴板。';
@@ -646,20 +607,16 @@ function getHTML() {
               showResult('生成失败:' + (error.message || '未知错误'), 'error');
           }
         });
-
       // 4.事件监听: Cloudflare SSL 提交
       document.getElementById('ssl-form').addEventListener('submit', async function (e) {
           e.preventDefault();
-
           // 获取输入值
           const email = document.getElementById('email').value.trim();
           const zoneId = document.getElementById('zone-id').value.trim();
           const apikey = document.getElementById('api-key').value.trim();
           const caSelect = document.getElementById('ca-select').value;
-
           // 重置错误状态
           resetErrors();
-
           // 验证输入
           let isValid = true;
           如果 (!email) {
@@ -675,12 +632,10 @@ function getHTML() {
               isValid = false;
           }
           如果 (!isValid) 返回；
-
           //显示加载状态
           document.getElementById('spinner').style.display = 'block';
           document.getElementById('btn-text').textContent = '添加中...';
           document.getElementById('submit-btn').disabled = true;
-
           尝试 {
               // 发送请求到 Worker API
               const response = await fetch('/api/add-ssl', {
@@ -696,9 +651,7 @@ function getHTML() {
                       ca: caSelect，
                   }),
               });
-
               const data = await response.json();
-
               // 显示结果
               如果 (data.success) {
                   showResult('证书添加成功,请10分钟后在Cloudflare该域名里检查SSL/TLS证书','成功');
@@ -724,5 +677,5 @@ function getHTML() {
   });
   </script>
 </body>
-</html>`;
+</html>` ;
 }
